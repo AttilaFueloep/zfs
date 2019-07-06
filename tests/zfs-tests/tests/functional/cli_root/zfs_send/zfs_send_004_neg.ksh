@@ -80,7 +80,8 @@ set -A badargs \
 	"-i @@${snap1##*@} $snap2" "-i $snap1 -i $snap1 $snap2" \
 	"-i snap1 snap2" "-i $snap1 snap2" \
 	"-i $snap1 $snap2 -i $snap1 $snap2" \
-	"-i snap1 $snap2 -i snap1 $snap2"
+	"-i snap1 $snap2 -i snap1 $snap2" \
+	"-R $TESTPOOL/$TESTFS" "-R $TESTPOOL/$TESTFS@nonexistent_snap"
 
 log_assert "Verify that invalid parameters to 'zfs send' are caught."
 log_onexit cleanup
