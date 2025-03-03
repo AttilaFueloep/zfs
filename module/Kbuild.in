@@ -103,6 +103,8 @@ ICP_OBJS := \
 	algs/edonr/edonr.o \
 	algs/modes/ccm.o \
 	algs/modes/gcm.o \
+	algs/modes/gcm_simd.o \
+	algs/modes/gcm_simd_impl.o \
 	algs/modes/gcm_generic.o \
 	algs/modes/modes.o \
 	algs/sha2/sha2_generic.o \
@@ -141,7 +143,8 @@ ICP_OBJS_X86_64 := \
 ICP_OBJS_X86 := \
 	algs/aes/aes_impl_aesni.o \
 	algs/aes/aes_impl_x86-64.o \
-	algs/modes/gcm_pclmulqdq.o
+	algs/modes/gcm_pclmulqdq.o \
+	algs/modes/gcm_simd_impl_avx.o
 
 ICP_OBJS_ARM := \
 	asm-arm/sha2/sha256-armv7.o \

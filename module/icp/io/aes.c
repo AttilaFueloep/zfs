@@ -36,6 +36,10 @@
 #define	_AES_IMPL
 #include <aes/aes_impl.h>
 #include <modes/gcm_impl.h>
+#include <modes/gcm_simd_impl.h>
+#if defined(CAN_USE_GCM_SIMD)
+#include <modes/gcm_simd.h>
+#endif
 
 /*
  * Mechanism info structure passed to KCF during registration.
@@ -238,9 +242,18 @@ aes_encrypt_atomic(crypto_mechanism_t *mechanism,
 				goto out;
 			ASSERT(aes_ctx.ac_remainder_len == 0);
 		} else if (mechanism->cm_type == AES_GCM_MECH_INFO_TYPE) {
-			ret = gcm_encrypt_final((gcm_ctx_t *)&aes_ctx,
-			    ciphertext, AES_BLOCK_LEN, aes_encrypt_block,
-			    aes_copy_block, aes_xor_block);
+			gcm_ctx_t *ctx = (gcm_ctx_t *)&aes_ctx;
+
+#if defined(CAN_USE_GCM_SIMD)
+			if (ctx->gcm_simd_impl != ZFS_GSO_NOSIMD) {
+				ret = gcm_encrypt_final_simd(ctx, ciphertext);
+			} else
+#endif
+			{
+				ret = gcm_encrypt_final(ctx, ciphertext,
+				    AES_BLOCK_LEN, aes_encrypt_block,
+				    aes_copy_block, aes_xor_block);
+			}
 			if (ret != CRYPTO_SUCCESS)
 				goto out;
 			ASSERT(aes_ctx.ac_remainder_len == 0);
@@ -346,9 +359,18 @@ aes_decrypt_atomic(crypto_mechanism_t *mechanism,
 				plaintext->cd_length = saved_length;
 			}
 		} else if (mechanism->cm_type == AES_GCM_MECH_INFO_TYPE) {
-			ret = gcm_decrypt_final((gcm_ctx_t *)&aes_ctx,
-			    plaintext, AES_BLOCK_LEN, aes_encrypt_block,
-			    aes_xor_block);
+			gcm_ctx_t *ctx = (gcm_ctx_t *)&aes_ctx;
+
+#if defined(CAN_USE_GCM_SIMD)
+			if (ctx->gcm_simd_impl != ZFS_GSO_NOSIMD) {
+				ret = gcm_decrypt_final_simd(ctx, plaintext);
+			} else
+#endif
+			{
+				ret = gcm_decrypt_final(ctx, plaintext,
+				    AES_BLOCK_LEN, aes_encrypt_block,
+				    aes_xor_block);
+			}
 			ASSERT(aes_ctx.ac_remainder_len == 0);
 			if ((ret == CRYPTO_SUCCESS) &&
 			    (ciphertext != plaintext)) {

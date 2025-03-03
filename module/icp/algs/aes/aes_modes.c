@@ -27,6 +27,10 @@
 #include <sys/zfs_context.h>
 #include <modes/modes.h>
 #include <aes/aes_impl.h>
+#include <modes/gcm_simd_impl.h>
+#if defined(CAN_USE_GCM_SIMD)
+#include <modes/gcm_simd.h>
+#endif
 
 /* Copy a 16-byte AES block from "in" to "out" */
 void
@@ -81,11 +85,20 @@ aes_encrypt_contiguous_blocks(void *ctx, char *data, size_t length,
 		    out, AES_BLOCK_LEN, aes_encrypt_block, aes_copy_block,
 		    aes_xor_block);
 	} else if (aes_ctx->ac_flags & GCM_MODE) {
-		rv = gcm_mode_encrypt_contiguous_blocks(ctx, data, length,
-		    out, AES_BLOCK_LEN, aes_encrypt_block, aes_copy_block,
-		    aes_xor_block);
-	}
-	else
+		gcm_ctx_t *gcm_ctx = (gcm_ctx_t *) ctx;
+
+#if defined CAN_USE_GCM_SIMD
+		if (gcm_ctx->gcm_simd_impl != ZFS_GSO_NOSIMD) {
+			rv = gcm_mode_encrypt_contiguous_blocks_simd(
+			    gcm_ctx, data, length, out);
+		} else
+#endif
+		{
+			rv = gcm_mode_encrypt_contiguous_blocks(gcm_ctx, data,
+			    length, out, AES_BLOCK_LEN, aes_encrypt_block,
+			    aes_copy_block, aes_xor_block);
+		}
+	} else
 		__builtin_unreachable();
 	return (rv);
 }
@@ -106,9 +119,19 @@ aes_decrypt_contiguous_blocks(void *ctx, char *data, size_t length,
 		    out, AES_BLOCK_LEN, aes_encrypt_block, aes_copy_block,
 		    aes_xor_block);
 	} else if (aes_ctx->ac_flags & GCM_MODE) {
-		rv = gcm_mode_decrypt_contiguous_blocks(ctx, data, length,
-		    out, AES_BLOCK_LEN, aes_encrypt_block, aes_copy_block,
-		    aes_xor_block);
+		gcm_ctx_t *gcm_ctx = (gcm_ctx_t *) ctx;
+
+#if defined CAN_USE_GCM_SIMD
+		if (gcm_ctx->gcm_simd_impl != ZFS_GSO_NOSIMD) {
+			rv = gcm_mode_decrypt_contiguous_blocks_simd(
+			    gcm_ctx, data, length);
+		} else
+#endif
+		{
+			rv = gcm_mode_decrypt_contiguous_blocks(gcm_ctx, data,
+			    length, out, AES_BLOCK_LEN, aes_encrypt_block,
+			    aes_copy_block, aes_xor_block);
+		}
 	} else
 		__builtin_unreachable();
 	return (rv);

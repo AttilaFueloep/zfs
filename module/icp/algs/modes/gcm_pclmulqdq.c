@@ -23,6 +23,7 @@
  * Copyright (c) 2003, 2010, Oracle and/or its affiliates. All rights reserved.
  */
 
+#include "modes/gcm_simd_impl.h"
 #if defined(__x86_64) && defined(HAVE_PCLMULQDQ)
 
 #include <sys/types.h>
@@ -57,9 +58,11 @@ gcm_pclmulqdq_will_work(void)
 	return (kfpu_allowed() && zfs_pclmulqdq_available());
 }
 
-const gcm_impl_ops_t gcm_pclmulqdq_impl = {
+gcm_impl_ops_t gcm_pclmulqdq_impl = {
 	.mul = &gcm_pclmulqdq_mul,
+	.simd_impl = ZFS_GSO_NOSIMD,
 	.is_supported = &gcm_pclmulqdq_will_work,
+	.is_fastest = B_FALSE,
 	.name = "pclmulqdq"
 };
 

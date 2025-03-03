@@ -23,6 +23,7 @@
  * Copyright (c) 2003, 2010, Oracle and/or its affiliates. All rights reserved.
  */
 
+#include "sys/types.h"
 #include <modes/gcm_impl.h>
 
 struct aes_block {
@@ -77,8 +78,10 @@ gcm_generic_will_work(void)
 	return (B_TRUE);
 }
 
-const gcm_impl_ops_t gcm_generic_impl = {
+gcm_impl_ops_t gcm_generic_impl = {
 	.mul = &gcm_generic_mul,
+	.simd_impl = ZFS_GSO_NOSIMD,
 	.is_supported = &gcm_generic_will_work,
+	.is_fastest = B_FALSE,
 	.name = "generic"
 };

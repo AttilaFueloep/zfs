@@ -34,17 +34,7 @@ extern "C" {
 #include <sys/zfs_context.h>
 #include <sys/crypto/common.h>
 #include <sys/crypto/impl.h>
-
-/*
- * Does the build chain support all instructions needed for the GCM assembler
- * routines. AVX support should imply AES-NI and PCLMULQDQ, but make sure
- * anyhow.
- */
-#if defined(__x86_64__) && defined(HAVE_AVX) && \
-    defined(HAVE_AES) && defined(HAVE_PCLMULQDQ)
-#define	CAN_USE_GCM_ASM
-extern boolean_t gcm_avx_can_use_movbe;
-#endif
+#include <modes/gcm_simd_impl.h>
 
 #define	CCM_MODE			0x00000010
 #define	GCM_MODE			0x00000020
@@ -166,15 +156,15 @@ typedef struct gcm_ctx {
 	 */
 	uint64_t gcm_ghash[2];
 	uint64_t gcm_H[2];
-#ifdef CAN_USE_GCM_ASM
+#ifdef CAN_USE_GCM_SIMD
 	uint64_t *gcm_Htable;
 	size_t gcm_htab_len;
 #endif
 	uint64_t gcm_J0[2];
 	uint64_t gcm_len_a_len_c[2];
 	uint8_t *gcm_pt_buf;
-#ifdef CAN_USE_GCM_ASM
-	boolean_t gcm_use_avx;
+#ifdef CAN_USE_GCM_SIMD
+	gcm_simd_impl_t  gcm_simd_impl;
 #endif
 } gcm_ctx_t;
 
@@ -258,6 +248,10 @@ extern int ccm_init_ctx(ccm_ctx_t *, char *, int, boolean_t, size_t,
 extern int gcm_init_ctx(gcm_ctx_t *, char *, size_t,
     int (*encrypt_block)(const void *, const uint8_t *, uint8_t *),
     void (*copy_block)(uint8_t *, uint8_t *),
+    void (*xor_block)(uint8_t *, uint8_t *));
+
+extern void gcm_format_initial_blocks(const uint8_t *iv, ulong_t iv_len,
+    gcm_ctx_t *ctx, size_t block_size, void (*copy_block)(uint8_t *, uint8_t *),
     void (*xor_block)(uint8_t *, uint8_t *));
 
 extern void calculate_ccm_mac(ccm_ctx_t *, uint8_t *,

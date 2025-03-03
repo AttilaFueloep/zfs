@@ -30,13 +30,14 @@
  * GCM function dispatcher.
  */
 
+#include "sys/types.h"
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
 #include <sys/zfs_context.h>
 #include <sys/crypto/common.h>
-
+#include <modes/gcm_simd_impl.h>
 /*
  * Methods used to define GCM implementation
  *
@@ -49,14 +50,16 @@ typedef boolean_t	(*gcm_will_work_f)(void);
 #define	GCM_IMPL_NAME_MAX (16)
 
 typedef struct gcm_impl_ops {
-	gcm_mul_f mul;
-	gcm_will_work_f is_supported;
+	const gcm_mul_f mul;
+	const gcm_will_work_f is_supported;
+	const gcm_simd_impl_t simd_impl;
+	boolean_t is_fastest;
 	char name[GCM_IMPL_NAME_MAX];
 } gcm_impl_ops_t;
 
-extern const gcm_impl_ops_t gcm_generic_impl;
+extern gcm_impl_ops_t gcm_generic_impl;
 #if defined(__x86_64) && defined(HAVE_PCLMULQDQ)
-extern const gcm_impl_ops_t gcm_pclmulqdq_impl;
+extern gcm_impl_ops_t gcm_pclmulqdq_impl;
 #endif
 
 /*

@@ -20,7 +20,10 @@ nodist_libicp_la_SOURCES = \
 	module/icp/algs/modes/modes.c \
 	module/icp/algs/modes/gcm_generic.c \
 	module/icp/algs/modes/gcm_pclmulqdq.c \
+	module/icp/algs/modes/gcm_simd_impl_avx.c \
 	module/icp/algs/modes/gcm.c \
+	module/icp/algs/modes/gcm_simd.c \
+	module/icp/algs/modes/gcm_simd_impl.c \
 	module/icp/algs/modes/ccm.c \
 	module/icp/algs/sha2/sha2_generic.c \
 	module/icp/algs/sha2/sha256_impl.c \

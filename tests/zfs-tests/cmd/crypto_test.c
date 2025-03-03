@@ -527,8 +527,7 @@ static const char *aes_gcm_impl[][2] = {
 	{ "generic", "pclmulqdq" },
 	{ "x86_64",  "pclmulqdq" },
 	{ "aesni",   "pclmulqdq" },
-	{ "x86_64",  "avx" },
-	{ "aesni",   "avx" },
+	{ "aesni",   "avx-aesni" },
 };
 
 /* signature of function to call after setting implementation params */
