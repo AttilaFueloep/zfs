@@ -53,11 +53,29 @@ FMAKE = env -u MAKEFLAGS make $(FMAKEFLAGS)
 modules-Linux:
 	mkdir -p $(sort $(dir $(spl-objs) $(spl-)))
 	mkdir -p $(sort $(dir $(zfs-objs) $(zfs-)))
+	@pwd
+	@echo pwd $(PWD)
+	@echo top buildir is @top_builddir@
+	@echo top srcdir is @top_srcdir@
+	@echo abs top buildir is @abs_top_builddir@
+	@echo abs top srcdir is @abs_top_srcdir@
+	@echo abs buildir is @abs_builddir@
+	@echo abs srcdir is @abs_srcdir@
+	@echo find wrapper: pwd/..
+	@find $(PWD)/.. -name objtool-wrapper
+	@echo find wrapper: top builddir
+	@find @abs_top_builddir@ -name objtool-wrapper
+	@echo find wrapper: top srcdir
+	@find @abs_top_srcdir@ -name objtool-wrapper
+	@echo buildir
+	@find @abs_top_builddir@ -maxdepth 2 -type d
+	@echo srcdir
+	@find @abs_top_srcdir@ -maxdepth 2 -type d
 	$(MAKE) -C @LINUX_OBJ@ $(if @KERNEL_CC@,CC=@KERNEL_CC@) \
 		$(if @KERNEL_LD@,LD=@KERNEL_LD@) $(if @KERNEL_LLVM@,LLVM=@KERNEL_LLVM@) \
 		$(if @KERNEL_CROSS_COMPILE@,CROSS_COMPILE=@KERNEL_CROSS_COMPILE@) \
 		$(if @KERNEL_ARCH@,ARCH=@KERNEL_ARCH@) \
-		$(if @OBJTOOL_DISABLE_WERROR@,objtool=@top_builddir@/scripts/objtool-wrapper) \
+		$(if @OBJTOOL_DISABLE_WERROR@,objtool=@abs_top_builddir@/scripts/objtool-wrapper) \
 		M="$$PWD" @KERNEL_MAKE@ CONFIG_ZFS=m modules
 
 modules-FreeBSD:
